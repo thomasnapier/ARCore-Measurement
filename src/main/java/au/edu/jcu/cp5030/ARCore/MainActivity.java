@@ -15,6 +15,7 @@ import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Config;
 import com.google.ar.core.HitResult;
 import com.google.ar.core.Plane;
+import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
 import com.google.ar.core.SharedCamera;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
@@ -32,6 +33,7 @@ import com.google.ar.sceneform.rendering.ShapeFactory;
 import com.google.ar.sceneform.ux.ArFragment;
 import com.google.ar.sceneform.ux.TransformableNode;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -60,8 +62,7 @@ public class MainActivity extends AppCompatActivity {
         clearAllButton.setOnClickListener(view -> clearAllAnchors());
 
         arFragment.setOnTapArPlaneListener((hitResult, plane, motionEvent) -> {
-            clearAllAnchors();
-            setupPlane(hitResult);
+            tapDistanceOf2Points(hitResult);
         });
 
     }
@@ -195,9 +196,38 @@ public class MainActivity extends AppCompatActivity {
         this.startActivity(i);
     }
 
-    private void measureDistance(){
+    private void tapDistanceOf2Points(HitResult hitResult){
+        // Allow up to 2 anchors and calculate distance on placement of the second marker
         if(placedAnchorNodes.size() == 0){
-
+            setupPlane(hitResult);
         }
+        else if(placedAnchorNodes.size() == 1){
+            setupPlane(hitResult);
+            measureDistanceOf2Points();
+        }
+        else{
+            clearAllAnchors();
+        }
+    }
+
+    private void measureDistanceOf2Points(){
+        double distance = 0;
+        distance = measureDistance(Objects.requireNonNull(placedAnchorNodes.get(0).getAnchor()).getPose(),
+                Objects.requireNonNull(placedAnchorNodes.get(1).getAnchor()).getPose());
+        Log.i("Distance", "Distance is: " + distance);
+    }
+
+    private Double measureDistance(Pose objectPose1, Pose objectPose2){
+        // Compute the difference vector between the two hit locations
+        return calculateDistance(
+                objectPose1.tx() - objectPose2.tx(),
+                objectPose1.ty() - objectPose2.ty(),
+                objectPose1.tz() - objectPose2.tz()
+        );
+    }
+
+    private Double calculateDistance(Float x, Float y, Float z){
+        // Compute the straight line distance between the two points
+        return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2));
     }
 }
