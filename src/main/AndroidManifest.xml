@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="au.edu.jcu.cp5030.ARCore">
-    <!-- Get camera permission -->
-    <uses-permission android:name="android.permission.CAMERA"/>
     <!-- Limits app visibility in the Google Play Store to ARCore supported devices
     (https://developers.google.com/ar/discover/supported-devices). -->
     <uses-feature android:name="android.hardware.camera.ar" android:required="true"/>
+    <!-- Get camera permission -->
+    <uses-permission android:name="android.permission.CAMERA"/>
     <uses-feature android:glEsVersion="0x00020000" android:required="true" />
     <application
         android:allowBackup="true"

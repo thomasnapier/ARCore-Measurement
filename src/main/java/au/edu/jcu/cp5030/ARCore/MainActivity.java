@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.ar.core.Anchor;
@@ -33,6 +34,8 @@ import com.google.ar.sceneform.rendering.ShapeFactory;
 import com.google.ar.sceneform.ux.ArFragment;
 import com.google.ar.sceneform.ux.TransformableNode;
 
+import org.w3c.dom.Text;
+
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Objects;
@@ -45,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     private ModelRenderable modelRenderable;
     private ArrayList<Anchor> placedAnchors = new ArrayList<>();
     private ArrayList<AnchorNode> placedAnchorNodes = new ArrayList<>();
+    private TextView distanceText;
 
     private boolean installRequested = true;
 
@@ -58,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
 
         arFragment = (ArFragment) getSupportFragmentManager().findFragmentById(R.id.sceneform_fragment);
 
+        distanceText = findViewById(R.id.distanceText);
         Button clearAllButton = findViewById(R.id.clearButton);
         clearAllButton.setOnClickListener(view -> clearAllAnchors());
 
@@ -207,13 +212,25 @@ public class MainActivity extends AppCompatActivity {
         }
         else{
             clearAllAnchors();
+            clearAllText();
+            Toast.makeText(this, "Cleared", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void clearAllText() {
+        distanceText.setText("");
+    }
+
+    private void updateDistanceText(Double distance) {
+        distance = distance * 100; //convert to cm
+        distanceText.setText(String.format("%.2fcm", distance));
     }
 
     private void measureDistanceOf2Points(){
         double distance = 0;
         distance = measureDistance(Objects.requireNonNull(placedAnchorNodes.get(0).getAnchor()).getPose(),
                 Objects.requireNonNull(placedAnchorNodes.get(1).getAnchor()).getPose());
+        updateDistanceText(distance);
         Log.i("Distance", "Distance is: " + distance);
     }
 

@@ -17,7 +17,28 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
+        android:layout_alignParentTop="true">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/distanceText"
+            android:textColor="@color/colorInformation"
+            android:textSize="24sp"
+            android:layout_centerHorizontal="true"
+            android:gravity="center"
+            android:backgroundTint="@color/colorPrimaryDark"
+            />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
         android:layout_alignParentBottom="true">
+
+
 
         <Button
             android:id="@+id/clearButton"
