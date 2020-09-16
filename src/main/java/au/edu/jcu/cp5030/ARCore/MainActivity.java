@@ -3,9 +3,11 @@ package au.edu.jcu.cp5030.ARCore;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.MotionEvent;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.google.ar.core.Anchor;
@@ -28,10 +30,10 @@ import com.google.ar.sceneform.rendering.MaterialFactory;
 import com.google.ar.sceneform.rendering.ModelRenderable;
 import com.google.ar.sceneform.rendering.ShapeFactory;
 import com.google.ar.sceneform.ux.ArFragment;
-import com.google.ar.sceneform.ux.BaseArFragment;
 import com.google.ar.sceneform.ux.TransformableNode;
 
-import java.util.EnumSet;
+import java.util.ArrayList;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
     private Session session;
@@ -39,8 +41,13 @@ public class MainActivity extends AppCompatActivity {
     private String cameraId;
     private ArFragment arFragment;
     private ModelRenderable modelRenderable;
+    private ArrayList<Anchor> placedAnchors = new ArrayList<>();
+    private ArrayList<AnchorNode> placedAnchorNodes = new ArrayList<>();
 
     private boolean installRequested = true;
+
+    public MainActivity() {
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +55,15 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         arFragment = (ArFragment) getSupportFragmentManager().findFragmentById(R.id.sceneform_fragment);
-        setupPlane();
+
+        Button clearAllButton = findViewById(R.id.clearButton);
+        clearAllButton.setOnClickListener(view -> clearAllAnchors());
+
+        arFragment.setOnTapArPlaneListener((hitResult, plane, motionEvent) -> {
+            clearAllAnchors();
+            setupPlane(hitResult);
+        });
+
     }
 
     @Override
@@ -133,13 +148,26 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void setupPlane(){
-        arFragment.setOnTapArPlaneListener((hitResult, plane, motionEvent) -> {
-            Anchor anchor = hitResult.createAnchor();
-            AnchorNode anchorNode = new AnchorNode(anchor);
-            anchorNode.setParent(arFragment.getArSceneView().getScene());
-            createRenderable(anchorNode);
-        });
+    private void setupPlane(HitResult hitResult){
+        Anchor anchor = hitResult.createAnchor();
+        placedAnchors.add(anchor);
+        // Attach AnchorNode to an Anchor from the hit test
+        AnchorNode anchorNode = new AnchorNode(anchor);
+        placedAnchorNodes.add(anchorNode);
+        anchorNode.setParent(arFragment.getArSceneView().getScene());
+        createRenderable(anchorNode);
+    }
+
+    private void createRenderable(AnchorNode anchorNode){
+        // Create 3D sphere using MaterialFactory and ModelRenderable to use as anchor markers
+        MaterialFactory
+                .makeOpaqueWithColor(this, new Color(android.graphics.Color.RED))
+                .thenAccept(material -> {
+                            ModelRenderable redSphereRenderable =
+                                    ShapeFactory.makeSphere(0.07f, new Vector3(0.0f, 0.15f, 0.0f), material);
+
+                            createModel(anchorNode, redSphereRenderable);
+                });
     }
 
     private void createModel(AnchorNode anchorNode, ModelRenderable modelRenderable){
@@ -149,14 +177,27 @@ public class MainActivity extends AppCompatActivity {
         node.select();
     }
 
-    private void createRenderable(AnchorNode anchorNode){
-        MaterialFactory
-                .makeOpaqueWithColor(this, new Color(android.graphics.Color.RED))
-                .thenAccept(material -> {
-                            ModelRenderable redSphereRenderable =
-                                    ShapeFactory.makeSphere(0.1f, new Vector3(0.0f, 0.15f, 0.0f), material);
+    private void clearAllAnchors(){
+        for(AnchorNode anchorNode : placedAnchorNodes){
+            arFragment.getArSceneView().getScene().removeChild(anchorNode);
+            Objects.requireNonNull(anchorNode.getAnchor()).detach();
+            anchorNode.setParent(null);
+            anchorNode.removeChild(anchorNode);
+            anchorNode.setRenderable(null);
+        }
+        placedAnchors.clear();
+        placedAnchorNodes.clear();
+    }
 
-                            createModel(anchorNode, redSphereRenderable);
-                });
+    private void clearSession(){
+        Intent i = new Intent(this, MainActivity.class);
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        this.startActivity(i);
+    }
+
+    private void measureDistance(){
+        if(placedAnchorNodes.size() == 0){
+
+        }
     }
 }
